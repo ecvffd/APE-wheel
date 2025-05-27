@@ -10,9 +10,7 @@ This project is a Wheel of Fortune mini app for Telegram that allows users to sp
 
 ## Features
 
-- Spin the wheel to win prizes
-- Token-based economy (costs 10 GFT per spin)
-- Prize distribution based on user level
+- Daily spin the wheel to win prizes
 - Prize history and claiming system
 
 ## Setup
