@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            Int      @id // Telegram user ID
+  name          String
+  coins         Int      @default(0)
+  nft           Int      @default(0)
+  lastSpin      DateTime?
+  walletAddress String?
+  prizes        Prize[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Prize {
+  id        String    @id @default(cuid())
+  type      PrizeType
+  amount    Int?      // for coins prizes
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@map("prizes")
+}
+
+enum PrizeType {
+  COINS
+  NFT
+  ZERO
+}

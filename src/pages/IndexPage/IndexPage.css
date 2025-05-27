@@ -1,0 +1,111 @@
+.index-page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #E0906B;
+    color: #fff;
+}
+
+.header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 1rem 0;
+}
+
+.modal-profile {
+    color: black;
+    --tgui--bg_color: #E0906B;
+    --tgui--hint_color: black;
+}
+
+.input-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.input {
+    background-color: #F9990F;
+    --tgui--secondary_hint_color: rgba(255, 255, 255, 0.5);
+    --tgui--outline: #CC7C12;
+    --tgui--link_color: #CC7C12;
+    width: 70vw;
+}
+
+.profile-image {
+    width: 54px;
+    height: 54px;
+    border-radius: 17px;
+    border: 3px solid white;
+    cursor: pointer;
+}
+
+.balances-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.balance-card {
+    padding: 2px 10px 1px 3px;
+    border-radius: 32px;
+    background-color: #B63013;
+    border: 3px solid #862011;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    cursor: pointer;
+}
+
+.wheel-container {
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 0 1rem 1rem;
+}
+
+.attempts-card {
+    padding: 6px 10px;
+    border-radius: 32px;
+    background-color: #F9990F;
+    border: 3px solid #CC7C12;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.error-card {
+    width: 100%;
+    max-width: 400px;
+    background-color: #ffebee;
+    border: 1px solid #f44336;
+}

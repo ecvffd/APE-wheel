@@ -1,0 +1,25 @@
+html {
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+body {
+  background: var(--tg-theme-bg-color, white);
+  color: var(--tg-theme-text-color, black);
+  padding: 0;
+  margin: 0;
+}
+
+body, div#root, .app-root {
+  height: 100%;
+  width: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+div[vaul-overlay] {
+  background: linear-gradient(to bottom, #E0906B 10%, rgba(255, 255, 255, 0.5)) !important;
+}
