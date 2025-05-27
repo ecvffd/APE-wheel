@@ -26,7 +26,7 @@ This project is a Wheel of Fortune mini app for Telegram that allows users to sp
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/wheel-project.git
+git clone https://github.com/ecvffd/APE-wheel.git
 cd wheel-project
 ```
 
