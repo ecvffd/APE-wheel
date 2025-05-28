@@ -63,9 +63,6 @@ WEB_APP_URL=https://your-domain.com
 NODE_ENV=development
 PORT=3001
 FRONTEND_URL=http://localhost:3000
-
-# Database
-DATABASE_URL="file:./dev.db"
 ```
 
 ### Telegram Bot Setup
