@@ -202,7 +202,7 @@ export function IndexPage() {
     };
 
     return (
-        <Page>
+        <Page back={false}>
             <div className="index-page">
                 <div className="header">
                     <img className="profile-image" src={initData.user()?.photo_url} alt="Profile" onClick={() => setShowWalletModal(true)} />

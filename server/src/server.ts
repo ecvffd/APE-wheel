@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -27,9 +28,11 @@ const getRandStr = (length: number): string => {
     return result;
 };
 
-// Wheel result function - 12 sectors: 2 zero, 2 nft, 8 coins (300-1000)
+// Wheel result function - 12 sectors with custom probabilities
+// Visual: 2 zero, 2 nft, 8 coins
+// Actual probabilities: 19.5% zero, 80% coins, 0.5% nft
 function getWheelResult(): { sectorIndex: number; prizeType: typeof PrizeType[keyof typeof PrizeType]; amount?: number } {
-    // 12 sectors: 8 coins, 2 zero, 2 nft
+    // 12 sectors for visual representation
     const sectors = [
         { type: PrizeType.COINS }, // sector 1
         { type: PrizeType.NFT }, // sector 2  
@@ -45,18 +48,49 @@ function getWheelResult(): { sectorIndex: number; prizeType: typeof PrizeType[ke
         { type: PrizeType.COINS },   // sector 12
     ];
 
-    // Pick random sector (1-12)
-    const sectorIndex = Math.floor(Math.random() * 12) + 1;
+    // Generate random number for probability calculation (0-1000 for precision)
+    const random = Math.floor(Math.random() * 1000);
+    
+    let actualPrizeType: typeof PrizeType[keyof typeof PrizeType];
+    
+    // Determine actual prize based on probabilities
+    if (random < 5) { // 0-4 = 0.5% NFT
+        actualPrizeType = PrizeType.NFT;
+    } else if (random < 200) { // 5-199 = 19.5% ZERO
+        actualPrizeType = PrizeType.ZERO;
+    } else { // 200-999 = 80% COINS
+        actualPrizeType = PrizeType.COINS;
+    }
+
+    // Pick random sector for visual (1-12)
+    let sectorIndex = Math.floor(Math.random() * 12) + 1;
+    
+    // If the actual prize doesn't match the visual sector, find a matching sector
     const sector = sectors[sectorIndex - 1];
+    if (sector.type !== actualPrizeType) {
+        // Find sectors that match the actual prize type
+        const matchingSectors: number[] = [];
+        sectors.forEach((s, index) => {
+            if (s.type === actualPrizeType) {
+                matchingSectors.push(index + 1);
+            }
+        });
+        
+        // If we have matching sectors, pick one randomly
+        if (matchingSectors.length > 0) {
+            sectorIndex = matchingSectors[Math.floor(Math.random() * matchingSectors.length)];
+        }
+        // If no matching sectors (shouldn't happen with current setup), keep original sector
+    }
 
     let amount: number | undefined;
 
-    if (sector.type === PrizeType.COINS) {
+    if (actualPrizeType === PrizeType.COINS) {
         // Random amount between 300-1000
         amount = Math.floor(Math.random() * (1000 - 300 + 1)) + 300;
     }
 
-    return { sectorIndex, prizeType: sector.type, amount };
+    return { sectorIndex, prizeType: actualPrizeType, amount };
 }
 
 // Create Express app
