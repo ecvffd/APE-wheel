@@ -1,4 +1,12 @@
+@font-face {
+  font-family: 'Golte';
+  src: url('/golte.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .animated-balance {
   transition: all 0.3s ease;
   display: inline-block;
+  font-family: 'Golte', Arial, sans-serif;
 }

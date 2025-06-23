@@ -237,36 +237,36 @@ export function WheelComponent({
 
     const spinWheel = () => {
         if (disabled || isSpinning) return;
-        
+
         setIsSpinning(true);
         setIsWaitingForResult(true);
         onSpinStart();
-        
+
         // Start continuous spinning using requestAnimationFrame
         const canvas = canvasRef.current;
         if (!canvas) return;
-        
+
         // Clear any existing transition
         canvas.style.transition = 'none';
-        
+
         let startTime = Date.now();
         let startRotation = currentRotation;
-        
+
         const animate = () => {
             if (!isWaitingForResult) return; // Stop if we have a result
-            
+
             const elapsed = Date.now() - startTime;
             const rotationSpeed = 360; // degrees per second
             const currentRotationValue = startRotation + (elapsed / 1000) * rotationSpeed;
-            
+
             const canvas = canvasRef.current;
             if (canvas) {
                 canvas.style.transform = `rotate(${currentRotationValue}deg)`;
             }
-            
+
             animationRef.current = requestAnimationFrame(animate);
         };
-        
+
         animationRef.current = requestAnimationFrame(animate);
     };
 
@@ -274,12 +274,12 @@ export function WheelComponent({
     useEffect(() => {
         if (isSpinning && isWaitingForResult && selectedPrizeId !== undefined) {
             setIsWaitingForResult(false);
-            
+
             // Cancel the continuous animation
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
             }
-            
+
             const canvas = canvasRef.current;
             if (!canvas) return;
 
@@ -293,36 +293,36 @@ export function WheelComponent({
 
             // Debug: Let's understand the current wheel state
             const sectorAngle = 360 / numSectors;
-            
+
             // Get current rotation from the canvas transform
             const currentTransform = canvas.style.transform;
-            const currentDeg = currentTransform ? 
+            const currentDeg = currentTransform ?
                 parseFloat(currentTransform.match(/rotate\(([^)]+)deg\)/)?.[1] || '0') : 0;
-            
+
             // The wheel starts with currentRotation = -90 degrees
             // This means sector 0 is at the top when the wheel is at -90 degrees
             // Each sector spans from (index * sectorAngle) to ((index + 1) * sectorAngle)
-            
+
             // Calculate a random position within the selected sector
             const sectorStartAngle = prizeIndex * sectorAngle;
             const randomWithinSector = Math.random() * sectorAngle; // Random position within the sector
             const sectorRandomOffset = sectorStartAngle + randomWithinSector;
-            
+
             // Calculate where we want to end up (random position within the selected sector at the top)
             const targetRotation = -90 - sectorRandomOffset;
-            
+
             // Calculate how much we need to rotate from current position
             let rotationNeeded = targetRotation - currentDeg;
-            
+
             // Always rotate forward (positive direction)
             while (rotationNeeded <= 0) {
                 rotationNeeded += 360;
             }
-            
+
             // Add extra spins for dramatic effect
             const extraSpins = 1800; // 5 full rotations
             const totalRotation = rotationNeeded + extraSpins;
-            
+
             // Final position
             const finalDegWithOffset = currentDeg + totalRotation;
 
@@ -333,24 +333,24 @@ export function WheelComponent({
             // Handle spin completion
             const handleTransitionEnd = () => {
                 canvas.style.transition = 'none';
-                
+
                 // Normalize rotation to 0-360 range for next spin
                 let normalizedDeg = finalDegWithOffset % 360;
                 if (normalizedDeg < 0) {
                     normalizedDeg += 360;
                 }
-                
+
                 canvas.style.transform = `rotate(${normalizedDeg}deg)`;
                 setCurrentRotation(normalizedDeg);
-                
+
                 setIsSpinning(false);
-                
+
                 // Find and return the winning prize
                 const winningPrize = prizes.find(prize => prize.id === selectedPrizeId);
                 if (winningPrize) {
                     onSpinComplete(winningPrize);
                 }
-                
+
                 canvas.removeEventListener('transitionend', handleTransitionEnd);
             };
 
@@ -410,7 +410,17 @@ export function WheelComponent({
     return (
         <div className="wheel-component">
             <div className={`wheel-inner-circle ${disabled ? 'disabled' : ''}`} onClick={spinWheel}>
-                <Text weight="1" style={{ textAlign: 'center', fontSize: centerTextFontSize, color: centerTextColor }}>{centerText}</Text>
+                <Text
+                    weight="1"
+                    style={{
+                        textAlign: 'center',
+                        fontSize: centerTextFontSize,
+                        color: centerTextColor,
+                        fontFamily: 'Golte, Arial, sans-serif',
+                        letterSpacing: '0.05em',
+                        padding: '0 8px',
+                    }}
+                >{centerText}</Text>
             </div>
             <div
                 ref={containerRef}

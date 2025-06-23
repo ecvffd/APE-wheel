@@ -6,10 +6,10 @@ interface AnimatedBalanceProps {
   value: number;
   style?: React.CSSProperties;
   duration?: number;
-  marginBottom?: string;
+  marginTop?: string;
 }
 
-export function AnimatedBalance({ value, style, duration = 1000, marginBottom = '2px' }: AnimatedBalanceProps) {
+export function AnimatedBalance({ value, style, duration = 1000, marginTop = '2px' }: AnimatedBalanceProps) {
   const { value: animatedValue, isAnimating } = useCountUp(value, { duration });
 
   return (
@@ -18,7 +18,8 @@ export function AnimatedBalance({ value, style, duration = 1000, marginBottom = 
       style={{ 
         fontSize: '24px', 
         lineHeight: '24px', 
-        marginBottom: marginBottom, 
+        marginTop: marginTop,
+        letterSpacing: '0.05em',
         color: '#fff',
         ...style 
       }}

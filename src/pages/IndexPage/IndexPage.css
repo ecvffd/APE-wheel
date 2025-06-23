@@ -19,6 +19,29 @@
     padding: 1rem 1rem 0;
 }
 
+.bg-container {
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    min-height: 264px;
+}
+
+.bg-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.modal-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+}
+
 .modal-profile {
     color: black;
     --tgui--bg_color: #E0906B;
@@ -33,11 +56,11 @@
 }
 
 .input {
-    background-color: #F9990F;
-    --tgui--secondary_hint_color: rgba(255, 255, 255, 0.5);
-    --tgui--outline: #CC7C12;
-    --tgui--link_color: #CC7C12;
-    width: 70vw;
+    background-color: #F9990F !important;
+    --tgui--secondary_hint_color: rgba(255, 255, 255, 0.5) !important;
+    --tgui--outline: #CC7C12 !important;
+    --tgui--link_color: #CC7C12 !important;
+    width: 70vw !important;
 }
 
 .profile-image {
@@ -50,8 +73,7 @@
 
 .balances-section {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     gap: 1rem;
 }
 
@@ -74,7 +96,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     width: 100%;
 }
 

@@ -206,20 +206,28 @@ export function IndexPage() {
     return (
         <Page back={false}>
             <div className="index-page">
+                <div className="bg-container">
+                    <img src={publicUrl('header-bg.png')} alt="Header background" />
+                    <img style={{ padding: '0 32px', marginTop: '-24px' }} src={publicUrl('logo.png')} alt="Logo" />
+                </div>
+
                 <div className="header">
                     <img className="profile-image" src={initData.user()?.photo_url} alt="Profile" onClick={() => setShowWalletModal(true)} />
 
 
                     {/* Balances */}
                     <div className="balances-section">
+                        {balances.nft > 0 && (
+                            <div className="balance-card" style={{ padding: '2px 10px 2px 6px' }} onClick={() => setShowWalletModal(true)}>
+                                <img src={nftIcon} style={{ width: '38px', height: '28px', userSelect: 'none', pointerEvents: 'none' }} alt="NFT" />
+                                <AnimatedBalance value={balances.nft} />
+                            </div>
+                        )}
                         <div className="balance-card" onClick={() => setShowWalletModal(true)}>
                             <img src={coinsIcon} style={{ width: '28px', height: '28px', userSelect: 'none', pointerEvents: 'none' }} alt="Coins" />
                             <AnimatedBalance value={balances.coins} />
                         </div>
-                        <div className="balance-card" style={{ padding: '6px 10px' }} onClick={() => setShowWalletModal(true)}>
-                            <Text weight="1" style={{ fontSize: '24px', lineHeight: '28px', color: '#fff', userSelect: 'none' }}>NFT</Text>
-                            <AnimatedBalance value={balances.nft} marginBottom='0px' />
-                        </div>
+
                     </div>
                 </div>
 
@@ -234,8 +242,8 @@ export function IndexPage() {
                         selectedPrizeId={selectedPrizeId}
                         onSpinComplete={handleSpinComplete}
                         onSpinStart={handleSpinClick}
-                        canvasWidth={368}
-                        canvasHeight={368}
+                        canvasWidth={400}
+                        canvasHeight={400}
                         fontSize={16}
                         disabled={isSpinning || !canSpin}
                         centerText={canSpin || isSpinning ? 'SPIN' : `Next spin in ${timeUntilNextSpin.hours}h ${timeUntilNextSpin.minutes}m`}
@@ -263,7 +271,7 @@ export function IndexPage() {
                 <Modal
                     open={showWalletModal}
                     onOpenChange={(e) => setShowWalletModal(e)}
-                    header={<ModalHeader after={<ModalClose><Icon28Close style={{ color: 'var(--tgui--plain_foreground)', cursor: 'pointer' }} /></ModalClose>}></ModalHeader>}
+                    header={<ModalHeader className="modal-header" after={<ModalClose><Icon28Close style={{ color: 'var(--tgui--plain_foreground)', cursor: 'pointer' }} /></ModalClose>}></ModalHeader>}
                     className='modal-profile'
                 >
                     <Placeholder
