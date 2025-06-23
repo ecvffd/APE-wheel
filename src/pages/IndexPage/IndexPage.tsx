@@ -66,7 +66,7 @@ export function IndexPage() {
     useEffect(() => {
         fetchWheelInfo();
 
-        miniApp.setBackgroundColor('#E0906B');
+        miniApp.setBackgroundColor('#F6DAB2');
         miniApp.setHeaderColor('#E0906B');
     }, []);
 

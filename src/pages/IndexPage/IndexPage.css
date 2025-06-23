@@ -3,7 +3,7 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background: #E0906B;
+    background: linear-gradient(to bottom, #E0906B, #F6DAB2);
     color: #fff;
 }
 
@@ -44,7 +44,7 @@
 
 .modal-profile {
     color: black;
-    --tgui--bg_color: #E0906B;
+    --tgui--bg_color: #F6DAB2;
     --tgui--hint_color: black;
 }
 
