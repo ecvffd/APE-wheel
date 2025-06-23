@@ -3,6 +3,8 @@ export interface WheelPrize {
     text?: string;
     prizeName?: string;
     imageUrl?: string;
+    imageWidth?: number;
+    imageHeight?: number;
     backgroundColor?: string;
     borderColor?: string;
     textColor?: string;

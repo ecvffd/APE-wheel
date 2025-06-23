@@ -16,6 +16,8 @@ import { Icon28Close } from '@telegram-apps/telegram-ui/dist/icons/28/close';
 const coinsImage = publicUrl('prizes/coins.svg');
 const zeroImage = publicUrl('prizes/zero.svg');
 const coinsIcon = publicUrl('prizes/coins-icon.svg');
+const nftIcon = publicUrl('prizes/nft.png');
+
 
 // Define the 12 sectors: 8 coins, 2 nft, 2 zero
 const pinkCoinsSector: Omit<WheelPrize, 'id'> = {
@@ -27,7 +29,7 @@ const redCoinsSector: Omit<WheelPrize, 'id'> = {
 }
 
 const nftSector: Omit<WheelPrize, 'id'> = {
-    text: 'NFT', prizeName: 'NFT', backgroundColor: '#EEBC02', borderColor: '#DD8706', textColor: '#000000'
+    prizeName: 'NFT', imageUrl: nftIcon, imageWidth: 44, imageHeight: 32, backgroundColor: '#EEBC02', borderColor: '#DD8706', textColor: '#000000'
 }
 
 const zeroSector: Omit<WheelPrize, 'id'> = {
@@ -261,7 +263,7 @@ export function IndexPage() {
                 <Modal
                     open={showWalletModal}
                     onOpenChange={(e) => setShowWalletModal(e)}
-                    header={<ModalHeader after={<ModalClose><Icon28Close style={{ color: 'var(--tgui--plain_foreground)', cursor: 'pointer' }} /></ModalClose>}>Only iOS header</ModalHeader>}
+                    header={<ModalHeader after={<ModalClose><Icon28Close style={{ color: 'var(--tgui--plain_foreground)', cursor: 'pointer' }} /></ModalClose>}></ModalHeader>}
                     className='modal-profile'
                 >
                     <Placeholder

@@ -180,10 +180,10 @@ export function WheelComponent({
                     ctx.rotate(midAngle + Math.PI / 2);
                     ctx.drawImage(
                         prizeImage,
-                        -imgSize / 2,
-                        -imgSize / 2,
-                        imgSize,
-                        imgSize
+                        -(prize.imageWidth || imgSize) / 2,
+                        -(prize.imageHeight || imgSize) / 2,
+                        prize.imageWidth || imgSize,
+                        prize.imageHeight || imgSize
                     );
                     ctx.restore();
                 } catch (e) {
