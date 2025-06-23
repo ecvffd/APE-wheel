@@ -81,6 +81,8 @@ FRONTEND_URL=http://localhost:3000
 
 The backend uses SQLite with Prisma ORM. Follow these steps to set up the database:
 
+#### First Time Setup (New Database)
+
 1. **Generate Prisma client and initialize database:**
    Navigate to the `server` directory:
    
@@ -95,6 +97,33 @@ The backend uses SQLite with Prisma ORM. Follow these steps to set up the databa
    # Create and sync the database
    npx prisma db push
    ```
+
+#### If You Already Have a Database
+
+If you already have an existing database (`server/prisma/dev.db` exists), you only need to generate the Prisma client:
+
+```bash
+cd server
+npx prisma generate
+```
+
+This will:
+- Generate the Prisma client based on your schema
+- Create the necessary TypeScript types
+- Enable your application to connect to the existing database
+
+#### Schema Changes
+
+If you've made changes to the Prisma schema (`server/prisma/schema.prisma`):
+
+```bash
+cd server
+# Apply schema changes to existing database
+npx prisma db push
+
+# Regenerate client with new schema
+npx prisma generate
+```
 
    **Note for Windows users:** If you encounter permission errors during `npx prisma generate`, try:
    ```powershell

@@ -33,7 +33,7 @@ export default defineConfig({
     // Exposes your dev server and makes it accessible for the devices in the same network.
     host: true,
     port: 3000,
-    allowedHosts: ['lenargum.ngrok.dev'],
+    allowedHosts: ['yoda-meme.fun'],
     // Proxy API requests to the backend server
     proxy: {
       '/api': {
