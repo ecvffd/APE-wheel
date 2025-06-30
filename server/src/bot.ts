@@ -87,6 +87,19 @@ function getBackToMenuKeyboard() {
     };
 }
 
+// Centralized welcome message
+function getWelcomeMessage() {
+    return `🎉 Welcome to MEME SEASON PASS WHEEL!
+
+🎰 Spin the wheel to win coins and exclusive NFTs
+💰 Manage your wallet for token distribution
+🎨 Get exclusive NFT access with early presale opportunities
+👥 Invite friends and earn bonus spins together
+📱 Stay connected with our community
+
+Choose an option from the menu below:`;
+}
+
 // Handle /start command
 bot.onText(/\/start/, async (msg) => {
     const chatId = msg.chat.id;
@@ -107,16 +120,8 @@ bot.onText(/\/start/, async (msg) => {
             telegramAlias
         });
 
-        const welcomeMessage = `🎉 Welcome to MEME SEASON PASS WHEEL!
-
-💰 Manage your wallet for token distribution
-🎨 Get exclusive NFT access
-📱 Stay connected with our community
-
-Choose an option from the menu below:`;
-
         // Send welcome message with reply keyboard
-        await bot.sendMessage(chatId, welcomeMessage, getMainMenuKeyboard());
+        await bot.sendMessage(chatId, getWelcomeMessage(), getMainMenuKeyboard());
         
         // Send web app button as inline keyboard
         await bot.sendMessage(chatId, '🎮 Ready to play?\nClick the button below to spin the wheel!', getWebAppKeyboard());
@@ -148,7 +153,7 @@ bot.on('message', async (msg) => {
             case '⬅️ Back to Menu':
                 // Clear any user state when going back to menu
                 userStates.delete(userId);
-                await bot.sendMessage(chatId, '🎉 Welcome to MEME SEASON PASS WHEEL!\n\n💰 Manage your wallet for token distribution\n🎨 Get exclusive NFT access\n📱 Stay connected with our community\n\nChoose an option from the menu below:', getMainMenuKeyboard());
+                await bot.sendMessage(chatId, getWelcomeMessage(), getMainMenuKeyboard());
                 // Send web app button
                 await bot.sendMessage(chatId, '🎮 Ready to play? Click the button below to spin the wheel!', getWebAppKeyboard());
                 break;
@@ -295,7 +300,7 @@ ${displayInviteText}
                     await bot.sendMessage(chatId, '🎮 Ready to play? Click the button below to spin the wheel!', getWebAppKeyboard());
                 } else {
                     // If it's not a recognized button and not waiting for wallet, show main menu
-                    await bot.sendMessage(chatId, 'Please use the buttons below to navigate:', getMainMenuKeyboard());
+                    await bot.sendMessage(chatId, getWelcomeMessage(), getMainMenuKeyboard());
                     // Send web app button
                     await bot.sendMessage(chatId, '🎮 Ready to play? Click the button below to spin the wheel!', getWebAppKeyboard());
                 }
