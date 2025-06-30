@@ -9,6 +9,10 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "bot": "tsx watch src/bot.ts",
+    "start:bot": "node dist/bot.js",
+    "start:with-bot": "concurrently \"npm run start\" \"npm run start:bot\"",
+    "build:start": "npm run build && npm run start",
+    "build:start:with-bot": "npm run build && npm run start:with-bot",
     "create-test-user": "tsx src/create-test-user.ts"
   },
   "dependencies": {
