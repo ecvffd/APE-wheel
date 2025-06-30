@@ -221,21 +221,34 @@ Be the first to get alpha on new listings, tools, and community rewards!`;
 
                     // Generate proper Telegram WebApp referral link
                     const referralLink = `https://t.me/${BOT_USERNAME}?startapp=${user.referralCode}`;
-                    const inviteText = `🎰 Join me in MEME SEASON PASS WHEEL! 
+                    // Escape underscores in bot username for Markdown
+                    const escapedBotUsername = BOT_USERNAME.replace(/_/g, '\\_');
+                    const escapedReferralLink = `https://t.me/${escapedBotUsername}?startapp=${user.referralCode}`;
+                    
+                    // For the share button, use non-escaped link
+                    const shareInviteText = `🎰 Join me in MEME SEASON PASS WHEEL! 
 🎁 You and I will get a bonus spin when you join
 
 Try your luck and win coins and NFTs!
 
 ${referralLink}`;
 
+                    // For the message display, use escaped link to prevent markdown issues
+                    const displayInviteText = `🎰 Join me in MEME SEASON PASS WHEEL! 
+🎁 You and I will get a bonus spin when you join
+
+Try your luck and win coins and NFTs!
+
+${escapedReferralLink}`;
+
                     const inviteMessage = `👥 Invite Friends & Earn Bonus Spins!
 
 🎯 Your referral code: \`${user.referralCode}\`
-🔗 Your referral link: ${referralLink}
+🔗 Your referral link: ${escapedReferralLink}
 
 📤 Share this message with your friends:
 
-${inviteText}
+${displayInviteText}
 
 💡 Tip: Use the share button below to send this to your Telegram contacts!`;
 
@@ -246,7 +259,7 @@ ${inviteText}
                             inline_keyboard: [
                                 [{ 
                                     text: '📤 Share with Friends', 
-                                    url: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(inviteText)}`
+                                    url: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareInviteText)}`
                                 }],
                                 [{ text: '🎰 Play Now', web_app: { url: WEB_APP_URL } }]
                             ]
