@@ -4,14 +4,14 @@ import { retrieveLaunchParams } from '@telegram-apps/sdk-react';
 import { WheelApiResponse, WheelInfoResponse, SetWalletResponse } from '@/types/common';
 
 // Get wheel info and user balances
-export async function getWheelInfo(): Promise<WheelInfoResponse> {
+export async function getWheelInfo(referralCode?: string): Promise<WheelInfoResponse> {
   try {
     // Get the Telegram WebApp initData from the launch parameters
     const launchParams = retrieveLaunchParams();
     const initData = launchParams.tgWebAppData || '';
     
     // Make the axios POST request to get wheel info
-    const { data } = await axios.post('/api/wheel/get', { initData });
+    const { data } = await axios.post('/api/wheel/get', { initData, referralCode });
     
     // Return the API response
     return data;

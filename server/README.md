@@ -106,6 +106,39 @@ Provides links to Discord and Telegram channels for community engagement.
 - **Prize**: Records all prize wins with type and amount
 - **PrizeType**: COINS, NFT, ZERO
 
+## Referral System Testing
+
+### Create Test User for Referral Testing
+
+```bash
+npm run create-test-user
+```
+
+This creates a test user with:
+- **User ID**: 2500
+- **Referral Code**: TEST1234  
+- **Initial Balance**: 1000 coins, 1 NFT
+- **Telegram Alias**: @testuser
+
+### Testing Referrals
+
+1. **Create referral link**: `https://t.me/YOUR_BOT_USERNAME?startapp=TEST1234`
+2. **Test scenarios**:
+   - Open webapp via Telegram with start param
+   - Verify new user gets welcome message
+   - Check that test user gets +1 referral spin
+   - Test spinning with referral bonus spin
+
+### Environment Variables for Referrals
+
+Update your `.env` file:
+
+```env
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+TELEGRAM_BOT_USERNAME=your_bot_username_without_@
+WEB_APP_URL=https://your-wheel-app.com
+```
+
 ## Integration
 
 The Telegram bot uses the same database as the web application, so wallet addresses set through the bot are immediately available in the web app and vice versa. 

@@ -59,6 +59,9 @@ TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 # Web App URL for Telegram Web App button (optional)
 WEB_APP_URL=https://your-domain.com
 
+# Telegram Bot username for referral links generation
+TELEGRAM_BOT_USERNAME="your_bot_username"
+
 # Server Configuration
 NODE_ENV=development
 PORT=3001
@@ -232,6 +235,14 @@ The bot provides the following functionality:
 - **Discord**: Community Discord server link
 - **Telegram**: Official Telegram channel link
 
+### 👥 Invite Friends
+- **Referral System**: Users can invite friends via unique referral links
+- **Bonus Spins**: Both referrer and referee get bonus spins when new users join
+- **Shareable Message**: Pre-formatted invitation message with referral link
+- **Tracking**: System tracks successful referrals and awards bonus spins automatically
+- **Referral Code**: Each user gets a unique referral code for tracking purposes
+
+
 ### Bot Commands
 - `/start` - Initialize bot and show main menu
 
@@ -269,6 +280,37 @@ The wheel uses a custom probability system:
 - **12 sectors** on the wheel for visual appeal
 - **8 coin sectors, 2 zero sectors, 2 NFT sectors**
 - **Actual probabilities** calculated separately from visual sectors
+
+## Referral System
+The referral system is designed to incentivize users to invite friends to the platform:
+
+### How It Works
+
+1. **Unique Referral Links**: Each user receives a personalized referral link in the format:
+   ```
+   https://t.me/YourBotUsername?start=ref_USER_ID
+   ```
+
+2. **Bonus Spin Mechanics**:
+   - Users earn 1 bonus spin for each successful referral
+   - New users who join via referral link also receive 1 bonus spin
+   - Bonus spins can be used even when the 24-hour cooldown period is active
+
+3. **Tracking System**:
+   - The system automatically tracks referrals through unique codes
+   - When a new user joins via a referral link, both users are credited
+   - Referral counts are stored in the database and displayed in the user profile
+
+4. **Implementation Details**:
+   - Referral tracking uses Telegram's `start` parameter
+   - The system validates referrals to prevent self-referrals and duplicate rewards
+   - Referral bonuses are applied immediately upon successful verification
+
+5. **Referral Statistics**:
+   - Users can view their total referral count
+   - The system shows how many bonus spins remain from referrals
+   - Statistics are updated in real-time as new referrals are processed
+
 
 ## Troubleshooting
 

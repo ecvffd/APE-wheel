@@ -13,17 +13,29 @@ export interface UserBalances {
 }
 
 export interface CreateUserData {
-    id: number;
+    id: bigint;
     name: string;
+    telegramAlias?: string;
+    referredBy?: bigint;
 }
 
 export interface CreatePrizeData {
     type: typeof PrizeType[keyof typeof PrizeType];
     amount?: number;
-    userId: number;
+    userId: bigint;
 }
 
 export class DatabaseService {
+    // Generate a unique referral code
+    private generateReferralCode(): string {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 8; i++) {
+            result += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return result;
+    }
+
     // Get or create user
     async getOrCreateUser(userData: CreateUserData): Promise<User> {
         const existingUser = await prisma.user.findUnique({
@@ -32,22 +44,67 @@ export class DatabaseService {
         });
 
         if (existingUser) {
+            // Update telegram alias if provided and different
+            if (userData.telegramAlias && userData.telegramAlias !== existingUser.telegramAlias) {
+                return await prisma.user.update({
+                    where: { id: userData.id },
+                    data: { telegramAlias: userData.telegramAlias },
+                    include: { prizes: true }
+                });
+            }
+            
+            // Generate referral code if missing
+            if (!existingUser.referralCode) {
+                const referralCode = this.generateReferralCode();
+                return await prisma.user.update({
+                    where: { id: userData.id },
+                    data: { referralCode },
+                    include: { prizes: true }
+                });
+            }
+
             return existingUser;
         }
 
-        return await prisma.user.create({
+        // Check if user was referred by someone
+        let referrer: User | null = null;
+        if (userData.referredBy) {
+            referrer = await prisma.user.findUnique({
+                where: { id: userData.referredBy }
+            });
+        }
+
+        // Create new user with referral code
+        const referralCode = this.generateReferralCode();
+        const newUser = await prisma.user.create({
             data: {
                 id: userData.id,
                 name: userData.name,
+                telegramAlias: userData.telegramAlias,
+                referralCode,
+                referredBy: referrer ? userData.referredBy : null,
                 coins: 0,
-                nft: 0
+                nft: 0,
+                referralCount: referrer ? 1 : 0 // Give bonus spin to new user if referred
             },
             include: { prizes: true }
         });
+
+        // Increment referrer's count (bonus spin for successful referral)
+        if (referrer) {
+            await prisma.user.update({
+                where: { id: referrer.id },
+                data: { 
+                    referralCount: { increment: 1 }
+                }
+            });
+        }
+
+        return newUser;
     }
 
     // Get user by ID
-    async getUserById(id: number): Promise<User | null> {
+    async getUserById(id: bigint): Promise<User | null> {
         return await prisma.user.findUnique({
             where: { id },
             include: { prizes: true }
@@ -55,7 +112,7 @@ export class DatabaseService {
     }
 
     // Update user's last spin time
-    async updateLastSpin(userId: number): Promise<User> {
+    async updateLastSpin(userId: bigint): Promise<User> {
         return await prisma.user.update({
             where: { id: userId },
             data: { lastSpin: new Date() },
@@ -64,7 +121,7 @@ export class DatabaseService {
     }
 
     // Update user's wallet address
-    async updateWalletAddress(userId: number, walletAddress: string | null): Promise<User> {
+    async updateWalletAddress(userId: bigint, walletAddress: string | null): Promise<User> {
         return await prisma.user.update({
             where: { id: userId },
             data: { walletAddress },
@@ -73,7 +130,7 @@ export class DatabaseService {
     }
 
     // Add coins to user balance
-    async addCoins(userId: number, amount: number): Promise<User> {
+    async addCoins(userId: bigint, amount: number): Promise<User> {
         return await prisma.user.update({
             where: { id: userId },
             data: { 
@@ -84,7 +141,7 @@ export class DatabaseService {
     }
 
     // Add NFT to user balance
-    async addNft(userId: number): Promise<User> {
+    async addNft(userId: bigint): Promise<User> {
         return await prisma.user.update({
             where: { id: userId },
             data: { 
@@ -102,7 +159,7 @@ export class DatabaseService {
     }
 
     // Process a prize win (update balance and create prize record)
-    async processPrizeWin(userId: number, prizeType: typeof PrizeType[keyof typeof PrizeType], amount?: number): Promise<{ user: User; prize: Prize }> {
+    async processPrizeWin(userId: bigint, prizeType: typeof PrizeType[keyof typeof PrizeType], amount?: number): Promise<{ user: User; prize: Prize }> {
         return await prisma.$transaction(async (tx: any) => {
             // Create the prize record
             const prize = await tx.prize.create({
@@ -147,15 +204,19 @@ export class DatabaseService {
     }
 
     // Get user's prize history
-    async getUserPrizes(userId: number): Promise<Prize[]> {
+    async getUserPrizes(userId: bigint): Promise<Prize[]> {
         return await prisma.prize.findMany({
             where: { userId },
             orderBy: { createdAt: 'desc' }
         });
     }
 
-    // Check if user can spin (24 hours since last spin)
-    canSpin(lastSpin: Date | null): boolean {
+    // Check if user can spin (24 hours since last spin OR has referral bonus spins)
+    canSpin(lastSpin: Date | null, referralCount: number): boolean {
+        // If user has referral bonus spins, they can always spin
+        if (referralCount > 0) return true;
+        
+        // Otherwise check 24 hour rule
         if (!lastSpin) return true;
 
         const now = new Date();
@@ -180,6 +241,32 @@ export class DatabaseService {
         const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
 
         return { hours, minutes };
+    }
+
+    // Use a referral bonus spin
+    async useReferralSpin(userId: bigint): Promise<User> {
+        return await prisma.user.update({
+            where: { id: userId },
+            data: { 
+                referralCount: { decrement: 1 }
+            },
+            include: { prizes: true }
+        });
+    }
+
+    // Find user by referral code
+    async getUserByReferralCode(referralCode: string): Promise<User | null> {
+        return await prisma.user.findUnique({
+            where: { referralCode },
+            include: { prizes: true }
+        });
+    }
+
+    // Count users invited by a specific user
+    async getInvitedUsersCount(userId: bigint): Promise<number> {
+        return await prisma.user.count({
+            where: { referredBy: userId }
+        });
     }
 
     // Disconnect from database (for cleanup)

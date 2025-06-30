@@ -4,9 +4,15 @@ import { db } from './database.js';
 
 // Get bot token from environment variable
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const BOT_USERNAME = process.env.TELEGRAM_BOT_USERNAME; // e.g., "yourbotname" (without @)
 
 if (!BOT_TOKEN) {
     console.error('TELEGRAM_BOT_TOKEN environment variable is required');
+    process.exit(1);
+}
+
+if (!BOT_USERNAME) {
+    console.error('TELEGRAM_BOT_USERNAME environment variable is required (bot username without @)');
     process.exit(1);
 }
 
@@ -46,7 +52,7 @@ function getMainMenuKeyboard() {
         reply_markup: {
             keyboard: [
                 [{ text: '💰 My Wallet' }, { text: '🎨 Buy NFT' }],
-                [{ text: '📱 Social Media' }]
+                [{ text: '👥 Invite Friends' }, { text: '📱 Social Media' }]
             ],
             resize_keyboard: true,
             one_time_keyboard: false
@@ -93,12 +99,15 @@ bot.onText(/\/start/, async (msg) => {
     try {
         // Get or create user in database
         const userName = `${msg.from?.first_name || ''} ${msg.from?.last_name || ''}`.trim() || `User_${userId}`;
-        await db.getOrCreateUser({
-            id: userId,
-            name: userName
+        const telegramAlias = msg.from?.username || undefined;
+        
+        const user = await db.getOrCreateUser({
+            id: BigInt(userId),
+            name: userName,
+            telegramAlias
         });
 
-        const welcomeMessage = `🎉 Welcome to Wheel Project Bot!
+        const welcomeMessage = `🎉 Welcome to MEME SEASON PASS WHEEL!
 
 💰 Manage your wallet for token distribution
 🎨 Get exclusive NFT access
@@ -139,14 +148,14 @@ bot.on('message', async (msg) => {
             case '⬅️ Back to Menu':
                 // Clear any user state when going back to menu
                 userStates.delete(userId);
-                await bot.sendMessage(chatId, '🎉 Welcome to Wheel Project Bot!\n\n💰 Manage your wallet for token distribution\n🎨 Get exclusive NFT access\n📱 Stay connected with our community\n\nChoose an option from the menu below:', getMainMenuKeyboard());
+                await bot.sendMessage(chatId, '🎉 Welcome to MEME SEASON PASS WHEEL!\n\n💰 Manage your wallet for token distribution\n🎨 Get exclusive NFT access\n📱 Stay connected with our community\n\nChoose an option from the menu below:', getMainMenuKeyboard());
                 // Send web app button
                 await bot.sendMessage(chatId, '🎮 Ready to play? Click the button below to spin the wheel!', getWebAppKeyboard());
                 break;
 
             case '💰 My Wallet':
                 // Get user from database
-                const user = await db.getUserById(userId);
+                const user = await db.getUserById(BigInt(userId));
                 
                 if (!user) {
                     await bot.sendMessage(chatId, 'Error: User not found. Please use /start to begin.', getBackToMenuKeyboard());
@@ -170,7 +179,7 @@ bot.on('message', async (msg) => {
 
             case '🗑️ Delete Wallet':
                 // Delete wallet address
-                await db.updateWalletAddress(userId, null);
+                await db.updateWalletAddress(BigInt(userId), null);
                 
                 await bot.sendMessage(chatId, '✅ Your SOL wallet has been successfully unlinked from our platform. No further actions are required.', getBackToMenuKeyboard());
                 break;
@@ -200,6 +209,58 @@ Be the first to get alpha on new listings, tools, and community rewards!`;
                 await bot.sendMessage(chatId, socialMessage, getBackToMenuKeyboard());
                 break;
 
+            case '👥 Invite Friends':
+                try {
+                    // Get user from database to get their referral code
+                    const user = await db.getUserById(BigInt(userId));
+                    
+                    if (!user || !user.referralCode) {
+                        await bot.sendMessage(chatId, 'Error: Unable to get your referral code. Please try /start again.', getBackToMenuKeyboard());
+                        return;
+                    }
+
+                    // Generate proper Telegram WebApp referral link
+                    const referralLink = `https://t.me/${BOT_USERNAME}?startapp=${user.referralCode}`;
+                    const inviteText = `🎰 Join me in MEME SEASON PASS WHEEL! 
+🎁 You and I will get a bonus spin when you join
+
+Try your luck and win coins and NFTs!
+
+${referralLink}`;
+
+                    const inviteMessage = `👥 Invite Friends & Earn Bonus Spins!
+
+🎯 Your referral code: \`${user.referralCode}\`
+🔗 Your referral link: ${referralLink}
+
+📤 Share this message with your friends:
+
+${inviteText}
+
+💡 Tip: Use the share button below to send this to your Telegram contacts!`;
+
+                    // Send message with share button
+                    await bot.sendMessage(chatId, inviteMessage, {
+                        parse_mode: 'Markdown',
+                        reply_markup: {
+                            inline_keyboard: [
+                                [{ 
+                                    text: '📤 Share with Friends', 
+                                    url: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(inviteText)}`
+                                }],
+                                [{ text: '🎰 Play Now', web_app: { url: WEB_APP_URL } }]
+                            ]
+                        }
+                    });
+
+                    // Also send the back to menu keyboard
+                    await bot.sendMessage(chatId, 'Use the menu below to navigate:', getBackToMenuKeyboard());
+                } catch (error) {
+                    console.error('Error in invite friends:', error);
+                    await bot.sendMessage(chatId, 'Sorry, there was an error getting your referral link. Please try again.', getBackToMenuKeyboard());
+                }
+                break;
+
             default:
                 // Handle wallet input if user is in waiting state
                 if (userState === 'waiting_for_wallet') {
@@ -210,7 +271,7 @@ Be the first to get alpha on new listings, tools, and community rewards!`;
                     }
 
                     // Update wallet address in database
-                    await db.updateWalletAddress(userId, text);
+                    await db.updateWalletAddress(BigInt(userId), text);
                     
                     // Clear user state
                     userStates.delete(userId);

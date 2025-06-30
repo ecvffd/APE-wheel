@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Page } from '@/components/Page';
 import { WheelComponent } from '@/components/Wheel/WheelComponent';
 import { AnimatedBalance } from '@/components/AnimatedBalance/AnimatedBalance';
-import { Text, Modal, Placeholder, Input } from '@telegram-apps/telegram-ui';
+import { Text, Modal, Placeholder, Input, Button } from '@telegram-apps/telegram-ui';
+import { retrieveLaunchParams, shareURL } from '@telegram-apps/sdk-react';
 import './IndexPage.css';
 import { publicUrl } from '@/helpers/publicUrl';
 import { debounce } from '@/helpers/utils';
@@ -59,12 +60,19 @@ export function IndexPage() {
     const [balances, setBalances] = useState<UserBalances>({ coins: 0, nft: 0 });
     const [isSpinning, setIsSpinning] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [referralSpins, setReferralSpins] = useState<number>(0);
+    const [invitedUsersCount, setInvitedUsersCount] = useState<number>(0);
+    const [showInviteModal, setShowInviteModal] = useState(false);
 
     const [selectedPrizeId, setSelectedPrizeId] = useState<number | undefined>(undefined);
 
-    // Fetch wheel info on component mount
+    // Get referral code from Telegram WebApp start parameter and fetch wheel info on component mount
     useEffect(() => {
-        fetchWheelInfo();
+        const launchParams = retrieveLaunchParams();
+
+        let refCode = launchParams.tgWebAppStartParam;
+
+        fetchWheelInfo(refCode);
 
         miniApp.setBackgroundColor('#F6DAB2');
         miniApp.setHeaderColor('#E0906B');
@@ -74,20 +82,24 @@ export function IndexPage() {
     useEffect(() => {
         if (!canSpin && timeUntilNextSpin.hours > 0 || timeUntilNextSpin.minutes > 0) {
             const interval = setInterval(() => {
-                fetchWheelInfo(); // Refresh to get updated countdown
+                fetchWheelInfo(); // Refresh to get updated countdown (referral code not needed for updates)
             }, 60000); // Update every minute
 
             return () => clearInterval(interval);
         }
     }, [canSpin, timeUntilNextSpin]);
 
-    const fetchWheelInfo = async () => {
+    const fetchWheelInfo = async (referralCode?: string) => {
         try {
-            const response = await getWheelInfo();
+            const response = await getWheelInfo(referralCode);
+
             if (response.ok) {
                 setCanSpin(response.canSpin || false);
                 setTimeUntilNextSpin(response.timeUntilNextSpin || { hours: 0, minutes: 0 });
                 setBalances(response.balances || { coins: 0, nft: 0 });
+                setReferralSpins(response.referralSpins || 0);
+                setInvitedUsersCount(response.invitedUsersCount || 0);
+
                 if (response.walletAddress) {
                     setWalletAddress(response.walletAddress);
                     setWalletConnected(true);
@@ -98,6 +110,43 @@ export function IndexPage() {
         } catch (err) {
             console.error('Error fetching wheel info:', err);
             setError('Failed to load wheel info');
+        }
+    };
+
+    const handleInviteFriends = () => {
+        setShowInviteModal(true);
+    };
+
+    const handleInviteShare = async () => {
+        try {
+            // Get user's referral code from the API response
+            const response = await getWheelInfo();
+            if (response.ok && response.referralCode) {
+                // Get bot configuration from API response
+                const botUsername = response.botConfig?.botUsername;
+
+                if (!botUsername) {
+                    console.error('Bot configuration missing:', response.botConfig);
+                    alert('Bot configuration error. Please contact support.');
+                    return;
+                }
+
+                const referralLink = `https://t.me/${botUsername}?startapp=${response.referralCode}`;
+                const inviteText = `
+🎰 Join me in MEME SEASON PASS WHEEL! 
+🎁 You and I will get a bonus spin when you join
+
+Try your luck and win coins and NFTs!`;
+
+                shareURL(referralLink, inviteText);
+
+                setShowInviteModal(false);
+            } else {
+                alert('Unable to get your referral link. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error sharing invitation:', error);
+            alert('Error sharing invitation. Please try again.');
         }
     };
 
@@ -121,6 +170,7 @@ export function IndexPage() {
         setError(null);
         setLastPrize(null);
         setLastPrizeAmount(null); // Reset prize amount for new spin
+        setReferralSpins(prev => prev - 1);
 
         try {
             const response = await spinWheel();
@@ -227,7 +277,9 @@ export function IndexPage() {
                             <img src={coinsIcon} style={{ width: '28px', height: '28px', userSelect: 'none', pointerEvents: 'none' }} alt="Coins" />
                             <AnimatedBalance value={balances.coins} />
                         </div>
-
+                        <button className="balance-card" style={{ padding: '2px 6px 2px 6px' }} onClick={handleInviteFriends}>
+                            <img src={publicUrl('invite.svg')} style={{ width: '28px', height: '28px', padding: '4px', userSelect: 'none', pointerEvents: 'none' }} alt="Coins" />
+                        </button>
                     </div>
                 </div>
 
@@ -266,6 +318,12 @@ export function IndexPage() {
                             <Text weight="1">You won: {getPrizeName(lastPrize)}</Text>
                         </div>
                     )}
+
+                    {referralSpins > 0 && (
+                        <div className="attempts-card">
+                            <Text weight="1">You have {referralSpins} invite bonus spin{referralSpins > 1 ? 's' : ''}</Text>
+                        </div>
+                    )}
                 </div>
 
                 <Modal
@@ -302,6 +360,50 @@ export function IndexPage() {
                                 borderRadius: '50%'
                             }}
                         />
+                    </Placeholder>
+                </Modal>
+
+                <Modal
+                    open={showInviteModal}
+                    onOpenChange={(e) => setShowInviteModal(e)}
+                    header={<ModalHeader className="modal-header" after={<ModalClose><Icon28Close style={{ color: 'var(--tgui--plain_foreground)', cursor: 'pointer' }} /></ModalClose>}></ModalHeader>}
+                    className='modal-profile'
+                >
+                    <Placeholder
+                        description={<div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <Text weight="3" style={{ whiteSpace: 'pre-line' }}>
+                                {`Get a free spin for each friend you invite!\nYour friends also get a bonus spin when they join.`}
+                            </Text>
+                            {invitedUsersCount > 0 && <Text weight="2" style={{ whiteSpace: 'pre-line' }}>
+                                {`Friends invited: ${invitedUsersCount}`}
+                            </Text>}
+                        </div>
+
+                        }
+                        header="Invite Friends"
+                        action={
+                            <Button
+                                size="l"
+                                onClick={handleInviteShare}
+                                style={{ marginTop: '16px' }}
+                            >
+                                Invite Friends
+                            </Button>
+                        }
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', }}>
+                            <img
+                                alt="Season Pass"
+                                src={nftIcon} // Temporary image, you can change this later
+                                style={{
+                                    display: 'block',
+                                    height: '144px',
+                                    width: '144px',
+                                    objectFit: 'contain'
+                                }}
+                            />
+
+                        </div>
                     </Placeholder>
                 </Modal>
             </div>

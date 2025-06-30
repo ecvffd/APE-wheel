@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "bot": "tsx watch src/bot.ts"
+    "bot": "tsx watch src/bot.ts",
+    "create-test-user": "tsx src/create-test-user.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.8.2",

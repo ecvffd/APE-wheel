@@ -39,6 +39,7 @@ export interface WheelApiResponse {
     result?: number;
     err?: string;
     prizeAmount?: number; // Amount of coins won (for coins prizes)
+    usedReferralSpin?: boolean; // Whether a referral bonus spin was used
 }
 
 export interface WheelInfoResponse {
@@ -47,6 +48,12 @@ export interface WheelInfoResponse {
     timeUntilNextSpin?: { hours: number; minutes: number };
     balances?: UserBalances;
     walletAddress?: string;
+    referralCode?: string; // User's referral code
+    referralSpins?: number; // Number of referral bonus spins available
+    invitedUsersCount?: number; // Number of users invited by this user
+    botConfig?: {
+        botUsername?: string;
+    };
     err?: string;
 }
 

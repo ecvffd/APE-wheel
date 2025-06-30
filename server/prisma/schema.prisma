@@ -15,6 +15,10 @@ datasource db {
 model User {
   id            BigInt      @id // Telegram user ID
   name          String
+  telegramAlias String?     // Telegram username/alias
+  referralCode  String?     @unique // Unique referral code (optional initially)
+  referredBy    BigInt?     // ID of user who referred this user
+  referralCount Int         @default(0) // Number of users referred by this user
   coins         Int         @default(0)
   nft           Int         @default(0)
   lastSpin      DateTime?
@@ -22,6 +26,10 @@ model User {
   prizes        Prize[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
+  // Self-referencing relation for referrals
+  referrer      User?       @relation("UserReferrals", fields: [referredBy], references: [id])
+  referredUsers User[]      @relation("UserReferrals")
 
   @@map("users")
 }

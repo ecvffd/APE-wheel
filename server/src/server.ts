@@ -101,7 +101,7 @@ app.use(express.json());
 // Middleware to parse Telegram initData and load user
 app.use('/api/wheel', async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-        const { initData } = req.body;
+        const { initData, referralCode } = req.body;
 
         if (!initData) {
             return res.status(400).json({ ok: false, err: 'Invalid request: No initData provided' });
@@ -109,11 +109,23 @@ app.use('/api/wheel', async (req: AuthenticatedRequest, res: Response, next: Nex
 
         const userId = initData.user.id;
         const userName = `${initData.user.first_name || ''} ${initData.user.last_name || ''}`.trim() || `User_${userId}`;
+        const telegramAlias = initData.user.username || null; // Extract telegram alias
+
+        // Handle referral code if provided
+        let referredBy: bigint | undefined;
+        if (referralCode) {
+            const referrer = await db.getUserByReferralCode(referralCode);
+            if (referrer && referrer.id !== BigInt(userId)) {
+                referredBy = referrer.id;
+            }
+        }
 
         // Get or create user from database
         const user = await db.getOrCreateUser({
-            id: userId,
-            name: userName
+            id: BigInt(userId),
+            name: userName,
+            telegramAlias,
+            referredBy
         });
 
         // Attach user object to request
@@ -131,8 +143,9 @@ app.post('/api/wheel/get', async (req: AuthenticatedRequest, res: Response) => {
     try {
         const user = req.user!;
 
-        const canUserSpin = db.canSpin(user.lastSpin);
+        const canUserSpin = db.canSpin(user.lastSpin, user.referralCount);
         const timeUntilNext = db.getTimeUntilNextSpin(user.lastSpin);
+        const invitedUsersCount = await db.getInvitedUsersCount(user.id);
 
         return res.json({
             ok: true,
@@ -142,7 +155,13 @@ app.post('/api/wheel/get', async (req: AuthenticatedRequest, res: Response) => {
                 coins: user.coins,
                 nft: user.nft
             },
-            walletAddress: user.walletAddress
+            walletAddress: user.walletAddress,
+            referralCode: user.referralCode,
+            referralSpins: user.referralCount, // Add referral spins count
+            invitedUsersCount, // Add invited users count
+            botConfig: {
+                botUsername: process.env.TELEGRAM_BOT_USERNAME,
+            }
         });
     } catch (err) {
         console.error('Error getting wheel info:', err);
@@ -171,32 +190,42 @@ app.post('/api/wheel/set-wallet', async (req: AuthenticatedRequest, res: Respons
     }
 });
 
-// Handling set to prevent concurrent spins
+// Handling set to prevent concurrent spins (using number conversion)
 const handling = new Set<number>();
 
 // Main wheel spin endpoint
 app.post('/api/wheel/roll', async (req: AuthenticatedRequest, res: Response) => {
     try {
         const user = req.user!;
+        const userIdNumber = Number(user.id); // Convert BigInt to number for Set
 
-        // Check if user can spin (24 hours since last spin)
-        if (!db.canSpin(user.lastSpin)) {
-            return res.json({ ok: false, err: 'Must wait 24 hours between spins' });
+        // Check if user can spin (24 hours since last spin OR has referral bonus spins)
+        if (!db.canSpin(user.lastSpin, user.referralCount)) {
+            return res.json({ ok: false, err: 'Must wait 24 hours between spins or invite friends for bonus spins' });
         }
 
         // Prevent concurrent spins
-        if (handling.has(user.id)) {
+        if (handling.has(userIdNumber)) {
             return res.json({ ok: false, err: 'Spin already in progress' });
         }
 
-        handling.add(user.id);
+        handling.add(userIdNumber);
 
         try {
+            // If user is using a referral bonus spin, decrement the count
+            let updatedUser = user;
+            const isUsingReferralSpin = user.referralCount > 0 && user.lastSpin && 
+                !db.canSpin(user.lastSpin, 0); // Can't spin normally but has referral spins
+            
+            if (isUsingReferralSpin) {
+                updatedUser = await db.useReferralSpin(user.id);
+            }
+
             // Get the wheel result
             const { sectorIndex, prizeType, amount } = getWheelResult();
 
             // Process the prize win in database (atomic transaction)
-            const { user: updatedUser, prize } = await db.processPrizeWin(user.id, prizeType, amount);
+            const { user: finalUser, prize } = await db.processPrizeWin(updatedUser.id, prizeType, amount);
 
             console.log(`Prize processed for user ${user.id}: ${prizeType} ${amount || ''}`);
 
@@ -204,15 +233,16 @@ app.post('/api/wheel/roll', async (req: AuthenticatedRequest, res: Response) => 
             return res.json({
                 ok: true,
                 result: sectorIndex,
-                prizeAmount: amount // Include the amount for coins prizes
+                prizeAmount: amount, // Include the amount for coins prizes
+                usedReferralSpin: isUsingReferralSpin
             });
         } finally {
             // Always remove from handling set
-            handling.delete(user.id);
+            handling.delete(userIdNumber);
         }
     } catch (err) {
         console.error('Error processing spin:', err);
-        handling.delete(req.user?.id || 0);
+        handling.delete(req.user ? Number(req.user.id) : 0);
         res.status(500).json({ ok: false, err: 'Server error' });
     }
 });
