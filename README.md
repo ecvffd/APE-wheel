@@ -65,7 +65,6 @@ TELEGRAM_BOT_USERNAME="your_bot_username"
 # Server Configuration
 NODE_ENV=development
 PORT=3001
-FRONTEND_URL=http://localhost:3000
 ```
 
 ### Telegram Bot Setup
@@ -256,7 +255,7 @@ The bot provides the following functionality:
 To build the project for production:
 
 ```bash
-npm run build:full
+npm run build
 ```
 
 The frontend will be built to the `dist/` directory, which the backend serves statically.

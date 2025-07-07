@@ -4,9 +4,10 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import { db, User } from './database.js';
+import { db } from './database.js';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
+import { User } from './generated/prisma/index.js';
 const { PrizeType } = require('./generated/prisma/index.js');
 
 // Set up __dirname for ES modules

@@ -76,8 +76,8 @@ export class DatabaseService {
 
         // Create new user with referral code
         const referralCode = this.generateReferralCode();
-        const newUser = await prisma.user.create({
-            data: {
+        const newUser = await prisma.user.upsert({
+            create: {
                 id: userData.id,
                 name: userData.name,
                 telegramAlias: userData.telegramAlias,
@@ -87,6 +87,10 @@ export class DatabaseService {
                 nft: 0,
                 referralCount: referrer ? 1 : 0 // Give bonus spin to new user if referred
             },
+            update: {
+                telegramAlias: userData.telegramAlias,
+            },
+            where: { id: userData.id },
             include: { prizes: true }
         });
 
@@ -277,7 +281,3 @@ export class DatabaseService {
 
 // Export a singleton instance
 export const db = new DatabaseService();
-
-// Export Prisma types for use in other files
-export { PrizeType } from './generated/prisma/index.js';
-export type { User, Prize } from './generated/prisma/index.js'; 
