@@ -40,3 +40,5 @@ server/prisma/dev.db-journal
 *.sw?
 
 *.pem
+
+ecosystem.config.cjs
